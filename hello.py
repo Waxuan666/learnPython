@@ -3,6 +3,7 @@ import copy
 import functools
 import time
 from functools import reduce
+from enum import Enum
 # import builtins
 
 '''
@@ -640,12 +641,12 @@ class Student2(object):
 
 s1 = Student2()
 s1.score = 90
-print(s1.score)
+# print(s1.score)
 
 s2 = Student2()
 s2.birth = 1998
-print(s2.birth)
-print(s2.age)
+# print(s2.birth)
+# print(s2.age)
 
 
 class Screen(object):
@@ -671,7 +672,7 @@ class Screen(object):
 Screen1 = Screen()
 Screen1.width = 1024
 Screen1.height = 768
-print(Screen1.resolution)
+# print(Screen1.resolution)
 
 
 ############### MixIn  多重继承 ####################################
@@ -714,6 +715,120 @@ class Ostrich(Bird):
 
 
 Dog1 = Dog()
-Dog1.run()
-Parrot1 =Parrot()
-Parrot1.fly()
+# Dog1.run()
+# Parrot1 = Parrot()
+# bParrot1.fly()
+
+
+#################### 定制类  ############################
+
+
+class Student3(object):
+    def __init__(self, name):
+        self.name = name
+
+    def __str__(self):
+        return 'Student3 object (name: %s)' % self.name
+
+
+print(Student3('Michael'))
+
+
+#################### __iter__()方法,该方法返回一个迭代对象，然后，Python的for循环就会不断调用该迭代对象的
+####################__next__()方法拿到循环的下一个值，直到遇到
+
+class Fib(object):
+    def __init__(self):
+        self.a = 0
+        self.b = 1
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        self.a, self.b = self.b, self.a + self.b
+        if self.a > 100000:
+            raise StopIteration()
+        return self.a
+
+#要表现得像list那样按照下标取出元素，需要实现__getitem__()方法：
+    def __getitem__(self, n):
+        if isinstance(n, int):
+            a, b = 1, 1
+            for x in range(n):
+                a, b = b, a + b
+            return a
+        if isinstance(n, slice):
+            start = n.start
+            stop = n.stop
+            if start is None:
+                start = 0
+            a, b = 1, 1
+            L = []
+            for x in range(stop):
+                if x >= start:
+                    L.append(a)
+                    a, b = b, a + b
+            return L
+
+# for x in Fib():
+#    print(x)
+
+
+f = Fib()
+print(f[0])
+print(f[1:10])
+
+
+######################__getattr__############################
+class Student4(object):
+
+    def __getattr__(self, attr):
+        if attr=='age':
+            return lambda: 25
+        raise AttributeError('\'Student4\' object has no attribute \'%s\'' % attr)
+# __call__()还可以定义参数。对实例进行直接调用就好比对一个函数进行调用一样，所以你完全可以把对象看成函数，
+# 把函数看成对象，因为这两者之间本来就没啥根本的区别。
+
+    def __call__(self,name):
+        print('My name is %s.' % name)
+
+
+s = Student4()
+print(s.age())
+
+s = Student4()
+print(s('Kiven'))
+
+
+# 通过callable()函数，我们就可以判断一个对象是否是“可调用”对象.
+# 枚举类，Enum
+Month = Enum('month', ('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'))
+
+for name, member in Month.__members__.items():
+    print(name, '=>', member, ',', member.value)
+
+
+
+class Gender(Enum):
+    Male = 0
+    Female = 1
+
+class Student5(object):
+    def __init__(self, name, gender):
+        self.name = name
+        self.gender = gender
+
+
+bart = Student5('Bart', Gender.Male)
+print(bart.gender)
+
+
+
+
+
+
+
+
+
+
