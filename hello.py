@@ -4,6 +4,15 @@ import functools
 import time
 from functools import reduce
 from enum import Enum
+import logging
+logging.basicConfig(level=logging.INFO)
+import unittest
+import re
+from datetime import datetime,timedelta,timezone
+import base64
+import hashlib
+import random
+import itertools
 # import builtins
 
 '''
@@ -731,7 +740,7 @@ class Student3(object):
         return 'Student3 object (name: %s)' % self.name
 
 
-print(Student3('Michael'))
+# print(Student3('Michael'))
 
 
 #################### __iter__()方法,该方法返回一个迭代对象，然后，Python的for循环就会不断调用该迭代对象的
@@ -776,8 +785,8 @@ class Fib(object):
 
 
 f = Fib()
-print(f[0])
-print(f[1:10])
+# print(f[0])
+# print(f[1:10])
 
 
 ######################__getattr__############################
@@ -795,18 +804,18 @@ class Student4(object):
 
 
 s = Student4()
-print(s.age())
+# print(s.age())
 
 s = Student4()
-print(s('Kiven'))
+# print(s('Kiven'))
 
 
 # 通过callable()函数，我们就可以判断一个对象是否是“可调用”对象.
 # 枚举类，Enum
 Month = Enum('month', ('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'))
 
-for name, member in Month.__members__.items():
-    print(name, '=>', member, ',', member.value)
+#for name, member in Month.__members__.items():
+#   print(name, '=>', member, ',', member.value)
 
 
 
@@ -821,7 +830,263 @@ class Student5(object):
 
 
 bart = Student5('Bart', Gender.Male)
-print(bart.gender)
+#print(bart.gender)
+
+
+###############  错误 调试 测试  ##################
+'''
+try:
+    print('try...')
+    r = 10 / int('5')
+    print('result:', r)
+except ValueError as e:
+    print('ValueError:', e)
+except ZeroDivisionError as e:
+    print('except:', e)
+else:
+    print('no error!')
+finally:
+    print('finally...')
+print('END')
+'''
+
+def foo(s):
+    return 10 / int(s)
+
+def bar(s):
+    return foo(s) * 2
+
+def main():
+    try:
+        bar('2')
+    except Exception as e:   ###  捕获Exception里的所有错误   ######
+        logging.exception(e)
+        print('Error:', e)
+    finally:
+        print('finally...')
+
+#main()
+def foo(s):
+    n = int(s)
+    if n==0:
+        raise ValueError('invalid value: %s' % s)
+    return 10 / n
+
+def bar():
+    try:
+        foo('0')
+    except ValueError as e:
+        print('ValueError!')
+        #raise
+
+#bar()
+
+
+def foo(s):
+    s = '0'
+    n = int(s)
+    # assert n != 0, 'n is zero!'   ###    断言
+    logging.info('n = %d' % n)
+    return 10 / n
+def main():
+    foo('0')
+# main()
+
+############################## 单元测试  ###############################
+class Student6(object):
+    def __init__(self, name, score):
+        self.name = name
+        self.score = score
+    def get_grade(self):
+        if 0 <= self.score <= 100:
+            if self.score >= 80:
+                return 'A'
+            if self.score >= 60:
+                return 'B'
+            return 'C'
+        else:
+            raise ValueError
+
+
+class TestStudent(unittest.TestCase):
+
+    def test_80_to_100(self):
+        s1 = Student6('Bart', 80)
+        s2 = Student6('Lisa', 100)
+        self.assertEqual(s1.get_grade(), 'A')
+        self.assertEqual(s2.get_grade(), 'A')
+
+    def test_60_to_80(self):
+        s1 = Student6('Bart', 60)
+        s2 = Student6('Lisa', 79)
+        self.assertEqual(s1.get_grade(), 'B')
+        self.assertEqual(s2.get_grade(), 'B')
+
+    def test_0_to_60(self):
+        s1 = Student6('Bart', 0)
+        s2 = Student6('Lisa', 59)
+        self.assertEqual(s1.get_grade(), 'C')
+        self.assertEqual(s2.get_grade(), 'C')
+
+    def test_invalid(self):
+        s1 = Student6('Bart', -1)
+        s2 = Student6('Lisa', 101)
+        with self.assertRaises(ValueError):
+            s1.get_grade()
+        with self.assertRaises(ValueError):
+            s2.get_grade()
+
+#if __name__ == '__main__':
+#    unittest.main()
+
+#################  文档测试  ####################
+def fact(n):
+    '''
+    Calculate 1*2*...*n
+    
+    >>> fact(1)
+    1
+    >>> fact(10)
+    3628800
+    >>> fact(-1)
+    Traceback (most recent call last):
+    ...
+    ValueError
+    '''
+    if n < 1:
+        raise ValueError()
+    if n == 1:
+        return 1
+    return n * fact(n - 1)
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod()
+
+
+import os
+#递归获取所有文件和文件夹
+def getAll(path=".", res=[]):
+    for item in os.listdir(path):
+        if os.path.isdir(item):
+            getAll(item, res)
+        else:
+            res.append(item)
+    return res
+#搜索
+def search(k):
+    def _match(x):
+        return x.find(k) > -1
+    return list(filter(_match, getAll()))
+
+#for item in list(map(lambda x:"filename:%s abs path:%s\n" %(x,os.path.abspath(x)),search("s"))):
+ #   print(item)
+
+'''
+print('Process (%s) start...' % os.getpid())
+
+pid = os.fork()
+if pid == 0:
+    print('I am child process (%s) and my parent is %s.' % (os.getpid(), os.getppid()))
+else:
+    print('I (%s) just created a child process (%s).' % (os.getpid(), pid))
+'''
+
+######################正则表达式######################
+s = r'ABC\-001'
+
+'''
+test = '010-12345'
+if re.match(r'^\d{3}\-\d{3,8}$', test):
+    print('ok')
+else:
+    print('failed')
+'''
+
+#################datetime############################
+def to_timestamp(dt_str, tz_str):
+    dt_str = datetime.strptime(dt_str, '%Y-%m-%d %H:%M:%S')
+    tz_num = int(re.match(r'UTC(.*?)\:.*', tz_str).group(1))
+    dt_str_set = dt_str.replace(tzinfo=timezone(timedelta(hours=tz_num)))
+    dt_num = dt_str_set.timestamp()
+    return dt_num
+#print(to_timestamp('2015-6-1 08:10:30', 'UTC+7:00'))
+
+#cday = datetime.strptime('2015-6-1 18:19:59', '%Y-%m-%d %H:%M:%S')
+#print(cday)
+
+
+def safe_base64_decode(s): 
+  
+    if(len(s) % 4 == 1):
+        return base64.b64decode(s + b'===')
+    elif(len(s) % 4 == 2):
+        return base64.b64decode(s + b'==')
+    elif(len(s) % 4 == 3):
+        return base64.b64decode(s + b'=')
+    else:
+        return base64.b64decode(s)
+
+
+
+
+md5 = hashlib.md5()
+md5.update('how to use md5 in python hashlib?'.encode('utf-8'))
+print(md5.hexdigest())
+
+db = {
+    'michael': 'e10adc3949ba59abbe56e057f20f883e',
+    'bob': '878ef96e86145580c38c87f0410ad153',
+    'alice': '99b1c2188db85afee403b1536010c2c9'
+}
+def login(user, password):
+    md5 = hashlib.md5()
+    md5.update(password.encode('utf-8'))
+    return db[user] == md5.hexdigest()
+
+
+print(login('michael', '123456'))
+
+
+
+'''
+class User(object):
+    def __init__(self, username, password):
+        self.username = username
+        self.salt = ''.join([chr(random.randint(48, 122)) for i in range(20)])
+        self.password = get_md5(password + self.salt)
+
+
+db = {
+    'michael': User('michael', '123456'),
+    'bob': User('bob', 'abc999'),
+    'alice': User('alice', 'alice2008')
+}
+'''
+
+
+
+def get_md5(s):
+    return hashlib.md5(s.encode('utf-8')).hexdigest()
+
+
+def login(username, password):
+    user = db[username]
+    return user.password == get_md5(password + user.salt)
+
+
+
+def pi(N):
+    return sum([4/x if x % 4 == 1 else -4/x for x in itertools.takewhile(lambda x: x < 2*N, itertools.count(1, 2))])
+print(pi(1000))
+
+print(sum( x if x % 2 == 0 else -x for x in [1,2,3,4,5,6]))
+
+
+
+
+
 
 
 
