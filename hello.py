@@ -13,6 +13,10 @@ import base64
 import hashlib
 import random
 import itertools
+from urllib import request
+import socket
+import ssl
+import threading
 # import builtins
 
 '''
@@ -1011,14 +1015,14 @@ def to_timestamp(dt_str, tz_str):
     dt_str_set = dt_str.replace(tzinfo=timezone(timedelta(hours=tz_num)))
     dt_num = dt_str_set.timestamp()
     return dt_num
-#print(to_timestamp('2015-6-1 08:10:30', 'UTC+7:00'))
+# print(to_timestamp('2015-6-1 08:10:30', 'UTC+7:00'))
 
-#cday = datetime.strptime('2015-6-1 18:19:59', '%Y-%m-%d %H:%M:%S')
-#print(cday)
+# cday = datetime.strptime('2015-6-1 18:19:59', '%Y-%m-%d %H:%M:%S')
+# print(cday)
 
 
-def safe_base64_decode(s): 
-  
+def safe_base64_decode(s):
+
     if(len(s) % 4 == 1):
         return base64.b64decode(s + b'===')
     elif(len(s) % 4 == 2):
@@ -1029,25 +1033,24 @@ def safe_base64_decode(s):
         return base64.b64decode(s)
 
 
-
-
 md5 = hashlib.md5()
 md5.update('how to use md5 in python hashlib?'.encode('utf-8'))
-print(md5.hexdigest())
+#print(md5.hexdigest())
 
 db = {
     'michael': 'e10adc3949ba59abbe56e057f20f883e',
     'bob': '878ef96e86145580c38c87f0410ad153',
     'alice': '99b1c2188db85afee403b1536010c2c9'
 }
+
+
 def login(user, password):
     md5 = hashlib.md5()
     md5.update(password.encode('utf-8'))
     return db[user] == md5.hexdigest()
 
 
-print(login('michael', '123456'))
-
+#print(login('michael', '123456'))
 
 
 '''
@@ -1066,7 +1069,6 @@ db = {
 '''
 
 
-
 def get_md5(s):
     return hashlib.md5(s.encode('utf-8')).hexdigest()
 
@@ -1076,12 +1078,219 @@ def login(username, password):
     return user.password == get_md5(password + user.salt)
 
 
-
 def pi(N):
     return sum([4/x if x % 4 == 1 else -4/x for x in itertools.takewhile(lambda x: x < 2*N, itertools.count(1, 2))])
-print(pi(1000))
 
-print(sum( x if x % 2 == 0 else -x for x in [1,2,3,4,5,6]))
+
+# print(pi(1000000))
+
+#print(sum(x if x % 2 == 0 else -x for x in [1, 2, 3, 4, 5, 6]))
+
+'''
+#####   GET 抓取URL内容
+with request.urlopen('http://news-at.zhihu.com/api/4/news/latest') as f:
+    data = f.read()
+    print('Status:', f.status, f.reason)
+    for k, v, in f.getheaders():
+        print('%s, %s' % (k, v))
+    print('Data:', data.decode('utf-8'))
+'''
+
+'''
+req = request.Request('http://www.douban.com/')
+req.add_header('User-Agent', 'Mozilla/6.0 (iPhone; CPU iPhone OS 8_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/8.0 Mobile/10A5376e Safari/8536.25')
+with request.urlopen(req) as f:
+    print('Status:', f.status, f.reason)
+    for k, v in f.getheaders():
+        print('%s: %s' % (k, v))
+    print('Data:', f.read().decode('utf-8'))
+
+############  Post  #############
+from urllib import request, parse
+print('Login to weibo.cn...')
+email = input('Email: ')
+passwd = input('Password: ')
+login_data = parse.urlencode([
+    ('username', email),
+    ('password', passwd),
+    ('entry', 'mweibo'),
+    ('client_id', ''),
+    ('savestate', '1'),
+    ('ec', ''),
+    ('pagerefer', 'https://passport.weibo.cn/signin/welcome?entry=mweibo&r=http%3A%2F%2Fm.weibo.cn%2F')
+])
+
+req = request.Request('https://passport.weibo.cn/sso/login')
+req.add_header('Origin', 'https://passport.weibo.cn')
+req.add_header('User-Agent', 'Mozilla/6.0 (iPhone; CPU iPhone OS 8_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/8.0 Mobile/10A5376e Safari/8536.25')
+req.add_header('Referer', 'https://passport.weibo.cn/signin/login?entry=mweibo&res=wel&wm=3349&r=http%3A%2F%2Fm.weibo.cn%2F')
+
+with request.urlopen(req, data=login_data.encode('utf-8')) as f:
+    print('Status:', f.status, f.reason)
+    for k, v in f.getheaders():
+        print('%s: %s' % (k, v))
+    print('Data:', f.read().decode('utf-8'))
+
+'''
+
+
+#####利用urllib读取JSON，然后将JSON解析为Python对象：
+def fetch_data(url):
+    import json
+    with request.urlopen(url) as f:
+        return json.loads(f.read().decode('utf-8'))
+
+'''
+from xml.parsers.expat import ParserCreate
+
+## 课堂派 操作系统原理 PBT5LC
+class DefaultSaxhandler(object):
+    def start_element(self, name, attrs):
+        print('sax:start_element: %s, attrs: %s' % (name, str(attrs)))
+
+    def end_element(self, text):
+        print('sax:end_element: %s' % text)
+
+xml=r<?xml version="1.0"?>
+<ol>
+    <li><a href="/python">Python</a></li>
+    <li><a href="/ruby">Ruby</a></li>
+</ol>
+
+
+
+handler = DefaultSaxhandler()
+parser = ParserCreate()
+parser.StartElementHandler = handler.start_element
+parser.EndElementHandler = handler.end_element
+parser.CharacterDataHandler = handler.char_data
+parser.Parse(xml)
+'''
+
+from html.parser import HTMLParser
+from html.entities import name2codepoint
+
+
+class MyHTMLParser(HTMLParser):
+    def handle_starttag(self, tag, attrs):
+        print('<%s>' % tag)
+
+    def handle_endtag(self, tag):
+        print('</%s>' % tag)
+
+    def handle_startendtag(self, tag, attrs):
+        print('<%s/>' % tag)
+
+    def handle_data(self, data):
+        print(data)
+
+    def handle_comment(self, data):
+        print('<!--',data, '-->')
+
+    def handle_entityref(self, name):
+        print('&%s;' % name)
+
+    def handle_charref(self, name):
+        print('&#%s;' % name)
+
+
+parser = MyHTMLParser()
+parser.feed('''''')
+
+'''
+from PIL import Image
+
+
+im = Image.open('test.jpeg')
+w, h = im.size
+print('size: %sx%s' % (w, h))
+im.thumbnail((w//2, h//2))
+print('Resize size: %sx%s'% (w//2,h//2))
+im.save('small.jpeg', 'jpeg')
+
+
+from tkinter import *
+
+class Application(Frame):
+    def __init__(self, master=None):
+        Frame.__init__(self, master)
+        self.pack()
+        self.createWidgets()
+
+    def createWidgets(self):
+        self.helloLabel = Label(self, text='Hello, world!')
+        self.helloLabel.pack()
+        self.quitButton = Button(self, text='Quit', command=self.quit)
+        self.quitButton.pack()
+
+
+app = Application()
+# 设置窗口标题:
+app.master.title('Hello World')
+# 主消息循环:
+app.mainloop()
+
+'''
+
+#s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s = ssl.wrap_socket(socket.socket())
+s.connect(('www.sina.com.cn', 443))
+
+s.send(b'GET / HTTP/1.1\r\nHost: www.sina.com.cn\r\nConnection: close\r\n\r\n')
+
+buffer = []
+while True:
+    d = s.recv(1024)
+    if d:
+        buffer.append(d)
+    else:
+        break
+data = b''.join(buffer)
+
+s.close()
+
+
+header, html = data.split(b'\r\n\r\n', 1)
+print(header.decode('utf-8'))
+# 把接收的数据写入文件:
+with open('sina.html', 'wb') as f:
+    f.write(html)
+
+
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.bind(('127.0.0.1', 9999))
+s.listen(5)
+print('Waiting for connection...')
+
+while True:
+    # 接受一个新连接:
+    sock, addr = s.accept()
+    # 创建新线程来处理TCP连接:
+    t = threading.Thread(target=tcplink, args=(sock, addr))
+    t.start()
+
+
+def tcplink(sock, addr):
+    print('accept new connection from %s:%S...' % addr)
+    sock.send(b'Welcome!')
+    while True:
+        data = sock.recv(1024)
+        time.sleep(1)
+        if not data or data.decode('utf-8') == 'exit':
+            break
+        sock.send(('Hello, %s!' % data.decode('utf-8')).encode('utf-8'))
+    sock.close()
+    print('Connection fro %s:%s closed.' % addr)
+
+
+
+
+
+
+
+
+
+
 
 
 
