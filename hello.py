@@ -1285,7 +1285,7 @@ def tcplink(sock, addr):
 
 
 
-
+print('clone到另一台电脑上继续工作.')
 
 
 
