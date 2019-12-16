@@ -4,7 +4,6 @@ Visit my tutorial website for more: https://morvanzhou.github.io/tutorials/
 """
 import matplotlib.pyplot as plt
 import numpy as np
-from turtle import *
 import folium  # 匯入 folium 套件
 import webbrowser
 
@@ -183,16 +182,29 @@ def run(cityposition1,NEW_SIZE):
     plt.close(ax)
 #result=run.result
 
+    print(result)
+    rresult = result[:]
+    result.pop()
+    b = result
+    print(result)
 
+    def aaa(b):
+        for i in range(len(b)):
+            if b[i] == (39.877781, 116.473008):
+                return i
+
+    b = b[aaa(b):len(b)] + b[:aaa(b)]
+    print(b)
 
 # 在地图中显示标记连线
+    time = ['8:00', '8:30', '9:00', '9:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30']
     fmap = folium.Map(location=[39.8745, 116.4756], zoom_start=16)
-    for i in range(len(result)):
-        m = folium.Marker(result[i],
-                          popup='<b>Skytree</b>')
+    for i in range(len(b)):
+        m = folium.Marker(b[i],
+                          popup=time[i])
         fmap.add_child(child=m)
 
-    fmap.add_child(folium.PolyLine(locations=result,  # 坐标List
+    fmap.add_child(folium.PolyLine(locations=rresult,  # 坐标List
                                    weight=8))  # 线条宽度
     fmap.save('map1.html')
 
@@ -204,11 +216,13 @@ window.title('校园导游')
 window.geometry('500x300')
 l = tk.Label(window, text='你好！欢迎使用校园导游系统！', bg='orange', font=('Arial', 12), width=30, height=2)
 l.pack()
-l1 = tk.Label(window, text='请您选择目标位置', bg='orange', font=('Arial', 12), width=30, height=2)
-l1.pack()
+
 
 frame = tk.Frame(window)
 frame.pack()
+
+frame_select0 = tk.Frame(frame)
+frame_select0.pack()
 
 frame_select = tk.Frame(frame)
 frame_select.pack()
@@ -216,11 +230,18 @@ frame_select.pack()
 frame_select1 = tk.Frame(frame)
 frame_select1.pack()
 
+
+
+
 btarray = np.array([0,1,2,3,4,5,6,7,8,9])
 btvalue = []
 for i in range(10):
     btvalue.append(tk.IntVar())
 #position = []
+
+def go(*args):  # 处理事件，*args表示可变参数
+    print(comboxlist.get())  # 打印选中的值
+
 def callbtValue():
 
     position = []
@@ -228,6 +249,17 @@ def callbtValue():
         position.append(btvalue[i].get())
     print('已选中位置:', position)
     return position
+l2 = tk.Label(frame_select0, text='请选择出发点', font=('Arial', 12), width=30, height=2)
+l2.pack()
+comvalue = tk.StringVar()
+comboxlist = ttk.Combobox(frame_select0, textvariable=comvalue)  # 初始化
+comboxlist["values"] = ("宿舍", "奥运餐厅", "计算机中心", "信息楼", "图书馆", "校医院", "ATM1", "ATM2", "羽毛球馆", "回民餐厅")
+comboxlist.current(0)  # 选择第一个
+comboxlist.bind("<<ComboboxSelected>>", go)  # 绑定事件,(下拉列表框被选中时，绑定go()函数)
+comboxlist.pack()
+
+l1 = tk.Label(frame_select0, text='请您选择目标位置',  font=('Arial', 12), width=30, height=2)
+l1.pack()
 
 c0 = ttk.Checkbutton(frame_select, text='宿舍', variable=btvalue[0], onvalue=1, offvalue=0,command=callbtValue)# 传值原理类似于radiobutton部件
 c1 = ttk.Checkbutton(frame_select, text='奥运餐厅', variable=btvalue[1], onvalue=1, offvalue=0,command=callbtValue)
@@ -240,16 +272,16 @@ c7 = ttk.Checkbutton(frame_select, text='ATM2', variable=btvalue[7], onvalue=1, 
 c8 = ttk.Checkbutton(frame_select, text='羽毛球馆', variable=btvalue[8], onvalue=1, offvalue=0,command=callbtValue)
 c9 = ttk.Checkbutton(frame_select, text='回民餐厅', variable=btvalue[9], onvalue=1, offvalue=0,command=callbtValue)
 
-c0.grid(row=0,column=0)
-c1.grid(row=0,column=1)
-c2.grid(row=0,column=2)
-c3.grid(row=0,column=3)
-c4.grid(row=0,column=4)
-c5.grid(row=1,column=0)
-c6.grid(row=1,column=1)
-c7.grid(row=1,column=2)
-c8.grid(row=1,column=3)
-c9.grid(row=1,column=4)
+c0.grid(row=1,column=0)
+c1.grid(row=1,column=1)
+c2.grid(row=1,column=2)
+c3.grid(row=1,column=3)
+c4.grid(row=1,column=4)
+c5.grid(row=2,column=0)
+c6.grid(row=2,column=1)
+c7.grid(row=2,column=2)
+c8.grid(row=2,column=3)
+c9.grid(row=2,column=4)
 
 
 #select_position = np.array(position)
@@ -294,7 +326,7 @@ def openhtml2():
 b0 = ttk.Button(frame_select1, text='运行', width=10,command=canrun)
 b1 = ttk.Button(frame_select1, text='查看结果', width=10,command=openhtml1)
 b2 = ttk.Button(frame_select1, text='发送至邮箱', width=10,command=mail)
-b3 = ttk.Button(frame_select1, text='预定羽毛球馆',width=10,command=openhtml2)
+b3 = ttk.Button(frame_select1, text='预定羽毛球馆', width=10,command=openhtml2)
 b0.grid(row=0,column=0)
 b1.grid(row=0,column=1)
 b2.grid(row=2,column=0)
